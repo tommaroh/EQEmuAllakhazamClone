@@ -5,6 +5,7 @@
  *  If no criteria is set then it is equivalent to searching for all items.
  *  For compatbility with Wikis and multi-word searches, underscores are treated as jokers in 'iname'.
  */
+ 
 $isearch = (isset($_GET['isearch']) ? $_GET['isearch'] : '');
 $iname = (isset($_GET['iname']) ? $_GET['iname'] : '');
 $iclass = (isset($_GET['iclass']) ? addslashes($_GET['iclass']) : '');
@@ -61,7 +62,6 @@ if (count($_GET) > 2) {
 				OR click_s.`name` LIKE '$effect') ";
         $s = "AND";
     }
-		
     if (($istat1 != "") AND ($istat1value != "")) {
         if ($istat1 == "ratio") {
             $query .= " $s ($items_table.delay/$items_table.damage $istat1comp $istat1value) AND ($items_table.damage>0)";
