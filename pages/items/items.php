@@ -5,7 +5,6 @@
  *  If no criteria is set then it is equivalent to searching for all items.
  *  For compatbility with Wikis and multi-word searches, underscores are treated as jokers in 'iname'.
  */
-
 $isearch = (isset($_GET['isearch']) ? $_GET['isearch'] : '');
 $iname = (isset($_GET['iname']) ? $_GET['iname'] : '');
 $iclass = (isset($_GET['iclass']) ? addslashes($_GET['iclass']) : '');
@@ -37,7 +36,7 @@ $iavailevel = (isset($_GET['iavailevel']) ? addslashes($_GET['iavailevel']) : ''
 $ideity = (isset($_GET['ideity']) ? addslashes($_GET['ideity']) : '');
 
 if (count($_GET) > 2) {
-    $query = "SELECT $items_table.* FROM ($items_table";
+        $query = "SELECT $items_table.* FROM ($items_table";
 
     if ($discovered_items_only == TRUE) {
         $query .= ",discovered_items";
@@ -45,9 +44,10 @@ if (count($_GET) > 2) {
 
     if ($iavailability == 1) {
         // mob dropped
-        $query .= ",$loot_drop_entries_table,$loot_table_entries,$npc_types_table";
+        $query .= ",$loot_drop_entries_table,$loot_table_entries,$npc_types_table,$spawn_entry_table,$zones_table,$spawn2_table";
     }
     $query .= ")";
+	
     $s = " WHERE";
     if ($ieffect != "") {
         $effect = "%" . str_replace(',', '%', str_replace(' ', '%', addslashes($ieffect))) . "%";
@@ -62,6 +62,7 @@ if (count($_GET) > 2) {
 				OR click_s.`name` LIKE '$effect') ";
         $s = "AND";
     }
+		
     if (($istat1 != "") AND ($istat1value != "")) {
         if ($istat1 == "ratio") {
             $query .= " $s ($items_table.delay/$items_table.damage $istat1comp $istat1value) AND ($items_table.damage>0)";
@@ -88,7 +89,14 @@ if (count($_GET) > 2) {
     {
         $query .= " $s $loot_drop_entries_table.item_id=$items_table.id
 				AND $loot_table_entries.lootdrop_id=$loot_drop_entries_table.lootdrop_id
-				AND $loot_table_entries.loottable_id=$npc_types_table.loottable_id";
+				AND $loot_table_entries.loottable_id=$npc_types_table.loottable_id
+				AND $npc_types_table.id = $spawn_entry_table.npcID
+				AND $spawn_entry_table.spawngroupID = $spawn2_table.spawngroupID
+				AND $spawn2_table.zone = $zones_table.short_name
+			";
+		foreach ($ignore_zones AS $zid) {
+            $query .= " AND $zones_table.short_name!='$zid'";
+        }
         if ($iavaillevel > 0) {
             $query .= " AND $npc_types_table.level<=$iavaillevel";
         }
@@ -145,9 +153,7 @@ if (count($_GET) > 2) {
         $query .= " $s ($items_table.nodrop=1)";
         $s = "AND";
     }
-	foreach ($ignore_zones AS $zid) {
-		$query .= " AND $zones_table.short_name!='$zid'";
-	}
+
     $query .= " GROUP BY $items_table.id ORDER BY $items_table.Name LIMIT " . (get_max_query_results_count($max_items_returned) + 1);
     $QueryResult = db_mysql_query($query);
 
@@ -223,7 +229,6 @@ if (isset($QueryResult)) {
             }
             $TableData .= "</td><td>";
 
-            # CreateToolTip($row["id"], return_item_stat_box($row, 1));
             $TableData .= "<a href='?a=item&id=" . $row["id"] . "' id='" . $row["id"] . "'>" . $row["Name"] . "</a>";
 
             $TableData .= "</td><td>";
