@@ -129,6 +129,7 @@ function return_where_item_sold($item_id){
             $spawn2_table,
             $zones_table,
             $spawn_entry_table,
+            $ignore_zones,
             $item;
 
     $is_item_sold_anywhere = get_field_result(
