@@ -5,7 +5,7 @@
  *  If no criteria is set then it is equivalent to searching for all items.
  *  For compatbility with Wikis and multi-word searches, underscores are treated as jokers in 'iname'.
  */
- 
+
 $isearch = (isset($_GET['isearch']) ? $_GET['isearch'] : '');
 $iname = (isset($_GET['iname']) ? $_GET['iname'] : '');
 $iclass = (isset($_GET['iclass']) ? addslashes($_GET['iclass']) : '');
