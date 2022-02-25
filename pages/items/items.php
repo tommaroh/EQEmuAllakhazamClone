@@ -6,6 +6,11 @@
  *  For compatbility with Wikis and multi-word searches, underscores are treated as jokers in 'iname'.
  */
 
+function debug_to_console($data) {
+    $output = $data;
+    echo "<script>console.log('" . $output . "' );</script>";
+}
+
 $isearch = (isset($_GET['isearch']) ? $_GET['isearch'] : '');
 $iname = (isset($_GET['iname']) ? $_GET['iname'] : '');
 $iclass = (isset($_GET['iclass']) ? addslashes($_GET['iclass']) : '');
@@ -92,10 +97,8 @@ if (count($_GET) > 2) {
 				AND $npc_types_table.id = $spawn_entry_table.npcID
 				AND $spawn_entry_table.spawngroupID = $spawn2_table.spawngroupID
 				AND $spawn2_table.zone = $zones_table.short_name
+                AND $zones_table.expansion < 4
 			";
-		foreach ($ignore_zones AS $zid) {
-            $query .= " AND $zones_table.short_name!='$zid'";
-        }
         if ($iavaillevel > 0) {
             $query .= " AND $npc_types_table.level<=$iavaillevel";
         }
@@ -153,6 +156,7 @@ if (count($_GET) > 2) {
         $s = "AND";
     }
     $query .= " GROUP BY $items_table.id ORDER BY $items_table.Name LIMIT " . (get_max_query_results_count($max_items_returned) + 1);
+    debug_to_console($query);
     $QueryResult = db_mysql_query($query);
 
     $field_values = '';
