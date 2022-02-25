@@ -76,7 +76,7 @@ function return_where_item_dropped($item_id, $via_ajax = 0)
             AND $npc_types_table.loottable_id = $loot_table_entries.loottable_id
             AND $loot_table_entries.lootdrop_id = $loot_drop_entries_table.lootdrop_id
             AND $loot_drop_entries_table.item_id = $item_id
-            AND $spawn2_table.zone = $zones_table.short_name
+            AND $zones_table.short_name = $spawn2_table.zone
     ";
         if ($merchants_dont_drop_stuff == TRUE) {
             $query .= " AND $npc_types_table.merchant_id=0";

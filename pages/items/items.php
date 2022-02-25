@@ -36,7 +36,7 @@ $iavailevel = (isset($_GET['iavailevel']) ? addslashes($_GET['iavailevel']) : ''
 $ideity = (isset($_GET['ideity']) ? addslashes($_GET['ideity']) : '');
 
 if (count($_GET) > 2) {
-        $query = "SELECT $items_table.* FROM ($items_table";
+    $query = "SELECT $items_table.* FROM ($items_table";
 
     if ($discovered_items_only == TRUE) {
         $query .= ",discovered_items";
@@ -47,7 +47,6 @@ if (count($_GET) > 2) {
         $query .= ",$loot_drop_entries_table,$loot_table_entries,$npc_types_table,$spawn_entry_table,$zones_table,$spawn2_table";
     }
     $query .= ")";
-	
     $s = " WHERE";
     if ($ieffect != "") {
         $effect = "%" . str_replace(',', '%', str_replace(' ', '%', addslashes($ieffect))) . "%";
@@ -153,7 +152,6 @@ if (count($_GET) > 2) {
         $query .= " $s ($items_table.nodrop=1)";
         $s = "AND";
     }
-
     $query .= " GROUP BY $items_table.id ORDER BY $items_table.Name LIMIT " . (get_max_query_results_count($max_items_returned) + 1);
     $QueryResult = db_mysql_query($query);
 
@@ -229,6 +227,7 @@ if (isset($QueryResult)) {
             }
             $TableData .= "</td><td>";
 
+            # CreateToolTip($row["id"], return_item_stat_box($row, 1));
             $TableData .= "<a href='?a=item&id=" . $row["id"] . "' id='" . $row["id"] . "'>" . $row["Name"] . "</a>";
 
             $TableData .= "</td><td>";
