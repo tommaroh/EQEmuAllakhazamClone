@@ -56,7 +56,6 @@ if (count($_GET) > 2) {
     $s = " WHERE";
     if ($ieffect != "") {
         $effect = "%" . str_replace(',', '%', str_replace(' ', '%', addslashes($ieffect))) . "%";
-
         $query .= " LEFT JOIN $spells_table AS proc_s ON proceffect=proc_s.id";
         $query .= " LEFT JOIN $spells_table AS worn_s ON worneffect=worn_s.id";
         $query .= " LEFT JOIN $spells_table AS focus_s ON focuseffect=focus_s.id";
@@ -97,8 +96,10 @@ if (count($_GET) > 2) {
 				AND $npc_types_table.id = $spawn_entry_table.npcID
 				AND $spawn_entry_table.spawngroupID = $spawn2_table.spawngroupID
 				AND $spawn2_table.zone = $zones_table.short_name
-                AND $zones_table.expansion < 4
 			";
+            foreach ($ignore_zones AS $zid) {
+                $query .= " AND $zones_table.short_name!='$zid'";
+            }
         if ($iavaillevel > 0) {
             $query .= " AND $npc_types_table.level<=$iavaillevel";
         }
