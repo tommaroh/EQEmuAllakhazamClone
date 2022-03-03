@@ -332,6 +332,28 @@ function get_deity_usable_string($val)
     return $res;
 }
 
+function get_available_items()
+{
+    // this will take a long time to run, the first time
+    $table_name = "available_items"
+    $query = "
+        CREATE TEMPORARY TABLE IF NOT EXISTS $table_name
+        AS (SELECT items.id 
+            FROM items, lootdrop_entries, loottable_entries, npc_types, spawnentry, spawn2, zone
+            WHERE lootdrop_entries.item_id=items.id 
+            AND loottable_entries.lootdrop_id=lootdrop_entries.lootdrop_id 
+            AND loottable_entries.loottable_id=npc_types.loottable_id 
+            AND npc_types.id = spawnentry.npcID 
+            AND spawnentry.spawngroupID = spawn2.spawngroupID 
+            AND spawn2.zone = zone.short_name 
+            AND zone.expansion <= 4
+        )
+    "
+    db_mysql_query($query);
+    return $table_name
+}
+
+
 function SelectMobRace($name, $selected)
 {
     global $dbiracenames;

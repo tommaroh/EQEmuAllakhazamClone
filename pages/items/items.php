@@ -6,11 +6,6 @@
  *  For compatbility with Wikis and multi-word searches, underscores are treated as jokers in 'iname'.
  */
 
-function debug_to_console($data) {
-    $output = $data;
-    echo "<script>console.log('" . $output . "' );</script>";
-}
-
 $isearch = (isset($_GET['isearch']) ? $_GET['isearch'] : '');
 $iname = (isset($_GET['iname']) ? $_GET['iname'] : '');
 $iclass = (isset($_GET['iclass']) ? addslashes($_GET['iclass']) : '');
@@ -40,6 +35,7 @@ $inodrop = (isset($_GET['inodrop']) ? addslashes($_GET['inodrop']) : '');
 $iavailability = (isset($_GET['iavailability']) ? addslashes($_GET['iavailability']) : '');
 $iavailevel = (isset($_GET['iavailevel']) ? addslashes($_GET['iavailevel']) : '');
 $ideity = (isset($_GET['ideity']) ? addslashes($_GET['ideity']) : '');
+$available_items = get_available_items();
 
 if (count($_GET) > 2) {
     $query = "SELECT $items_table.* FROM ($items_table";
@@ -48,14 +44,15 @@ if (count($_GET) > 2) {
         $query .= ",discovered_items";
     }
 
-    if ($iavailability == 1) {
-        // mob dropped
-        $query .= ",$loot_drop_entries_table,$loot_table_entries,$npc_types_table,$spawn_entry_table,$zones_table,$spawn2_table";
-    }
     $query .= ")";
     $s = " WHERE";
+    if ($iavailability == 1) {
+        // mob dropped
+        $query .= " $items_table.id IN (SELECT $available_items.id FROM $available_items)";
+    }
     if ($ieffect != "") {
         $effect = "%" . str_replace(',', '%', str_replace(' ', '%', addslashes($ieffect))) . "%";
+
         $query .= " LEFT JOIN $spells_table AS proc_s ON proceffect=proc_s.id";
         $query .= " LEFT JOIN $spells_table AS worn_s ON worneffect=worn_s.id";
         $query .= " LEFT JOIN $spells_table AS focus_s ON focuseffect=focus_s.id";
@@ -92,14 +89,7 @@ if (count($_GET) > 2) {
     {
         $query .= " $s $loot_drop_entries_table.item_id=$items_table.id
 				AND $loot_table_entries.lootdrop_id=$loot_drop_entries_table.lootdrop_id
-				AND $loot_table_entries.loottable_id=$npc_types_table.loottable_id
-				AND $npc_types_table.id = $spawn_entry_table.npcID
-				AND $spawn_entry_table.spawngroupID = $spawn2_table.spawngroupID
-				AND $spawn2_table.zone = $zones_table.short_name
-			";
-            foreach ($ignore_zones AS $zid) {
-                $query .= " AND $zones_table.short_name!='$zid'";
-            }
+				AND $loot_table_entries.loottable_id=$npc_types_table.loottable_id";
         if ($iavaillevel > 0) {
             $query .= " AND $npc_types_table.level<=$iavaillevel";
         }
@@ -157,7 +147,6 @@ if (count($_GET) > 2) {
         $s = "AND";
     }
     $query .= " GROUP BY $items_table.id ORDER BY $items_table.Name LIMIT " . (get_max_query_results_count($max_items_returned) + 1);
-    debug_to_console($query);
     $QueryResult = db_mysql_query($query);
 
     $field_values = '';
