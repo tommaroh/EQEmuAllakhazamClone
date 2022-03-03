@@ -7,38 +7,39 @@
  */
 
 $origin_directory = getcwd();
-$temporary_location = "/tmp/db_source/";
+$tmp_dir = "/tmp/db_source";
+$tmp_path = "$tmp_dir/peq-db.zip";
 
 /**
  * Download file
  */
-$peq_dump = file_get_contents('http://edit.peqtgc.com/weekly/peq_beta.zip');
-if (!file_exists($temporary_location)) {
-    mkdir($temporary_location);
-    file_put_contents($temporary_location . 'peq_beta.zip', $peq_dump);
+echo "Downloading PEQ DB...\n";
+if (!file_exists($tmp_dir)) {
+    mkdir($tmp_dir);
 }
+$peq_dump = file_get_contents('http://db.projecteq.net/latest', $tmp_path);
+
 
 /**
  * Source database
  */
-echo "Installing unzip, mysql-client if not installed...\n";
+echo "Installing mysql-client...\n";
 exec("apt-get update && apt-get -y install unzip mysql-client");
 
-echo "Unzipping peq_beta.zip...\n";
-exec("unzip -o {$temporary_location}peq_beta.zip -d {$temporary_location}");
+$result=exec("ls $tmp_dir/peq-dump");
+echo "$result\n";
 
 echo "Creating database PEQ...\n";
 exec('mysql -h mariadb -uroot -proot -e "CREATE DATABASE peq"  2>&1 | grep -v \'Warning\'');
 
 echo "Sourcing data...\n";
-chdir($temporary_location);
-exec("mysql -h mariadb -uroot -proot peq < peqbeta.sql  2>&1 | grep -v 'Warning'");
-exec("mysql -h mariadb -uroot -proot peq < player_tables.sql  2>&1 | grep -v 'Warning'");
+chdir("$tmp_dir/peq-dump");
+exec("mysql -h mariadb -uroot -proot peq < create_all_tables.sql  2>&1 | grep -v 'Warning'");
 chdir($origin_directory);
 echo "Seeding complete!\n";
 
 /**
  * Unlink
  */
-array_map('unlink', glob($temporary_location . "*.*"));
-rmdir($temporary_location);
+array_map('unlink', glob($tmp_dir . "*.*"));
+rmdir($tmp_dir);
