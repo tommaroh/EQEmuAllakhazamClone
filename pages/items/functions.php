@@ -129,6 +129,7 @@ function return_where_item_sold($item_id){
             $spawn2_table,
             $zones_table,
             $spawn_entry_table,
+			$ignore_zones,
             $item;
 
     $is_item_sold_anywhere = get_field_result(
@@ -157,6 +158,10 @@ function return_where_item_sold($item_id){
             AND $merchant_list_table.merchantid = $npc_types_table.merchant_id
             AND $zones_table.short_name = $spawn2_table.zone
         ";
+
+        foreach ($ignore_zones AS $zid) {
+            $query .= " AND $zones_table.short_name!='$zid'";
+        }
 
         $result = db_mysql_query($query);
 
@@ -378,5 +383,10 @@ function return_where_item_result_trade_skill($item_id){
 
     return;
 }
+
+function get_ignore_zones_list(){
+	global $ignore_zones;
+	
+	
 
 ?>
