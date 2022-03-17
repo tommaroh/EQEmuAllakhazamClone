@@ -60,13 +60,10 @@ $print_buffer .= '
 			<option value="12"' . ($type == 12 ? ' selected="1"' : '') . '>Wizard</option>
 			</select></td></tr>
 
-			<tr><td>Level:</td><td><select name="level">
-			<option value="">-----</option>';
+			<tr><td>Level:</td><td><select name="level">';
 
-$selected = 0;
 for ($i = 1; $i <= $server_max_level; $i++) {
-    $print_buffer .= '<option value="' . $i . '"' . ($level == $i ? ' selected="$selected"' : '') . '>' . $i . '</option>';
-	$selected = 1;
+    $print_buffer .= '<option value="' . $i . '"' . ($level == $i ? ' selected"' : '') . '>' . $i . '</option>';
 }
 
 $print_buffer .= '</select>

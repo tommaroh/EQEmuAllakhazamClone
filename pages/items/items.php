@@ -157,7 +157,7 @@ if (count($_GET) > 2) {
         $query .= " $s ($items_table.nodrop=1)";
         $s = "AND";
     }
-    $query .= " ORDER BY $items_table.Name";
+    $query .= " ORDER BY $items_table.Name LIMIT 1000";
     $QueryResult = db_mysql_query($query);
 
     $field_values = '';
@@ -166,7 +166,6 @@ if (count($_GET) > 2) {
     }
 
     $footer_javascript .= '<script type="text/javascript">' . $field_values . '</script>';
-    // $footer_javascript .= '<script type="text/javascript">highlight_element("#item_search_results");</script>';
 
 
 } else {
@@ -253,8 +252,8 @@ if (isset($QueryResult)) {
             $(document).ready(function() {
                 var table = $(".datatable").DataTable( {
                     "paging": true,
-                    "searching": false,
-                    "ordering": true,
+                    "searching": true,
+                    "ordering": true
                 } );
                 table.order( [ 1, "asc" ] );
                 table.draw();
