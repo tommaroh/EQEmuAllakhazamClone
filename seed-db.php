@@ -1,39 +1,44 @@
 <?php
-
-function errHandle($errNo, $errStr, $errFile, $errLine) {
-    $msg = "$errStr in $errFile on line $errLine";
-    if ($errNo == E_NOTICE || $errNo == E_WARNING) {
-        throw new ErrorException($msg, $errNo);
-    } else {
-        echo $msg;
-    }
-}
-
-set_error_handler('errHandle');
+/**
+ * Created by PhpStorm.
+ * User: cmiles
+ * Date: 6/9/18
+ * Time: 9:46 PM
+ */
 
 $origin_directory = getcwd();
-$tmp_dir = "/tmp/db_source";
-$tmp_path = "$tmp_dir/peq-db.zip";
+$temporary_location = "/tmp/db_source/";
 
-echo "Downloading PEQ DB...\n";
-exec("rm -rf $tmp_dir");
-mkdir($tmp_dir);
-$peq_dump = file_get_contents('http://db.projecteq.net/latest');
-file_put_contents($tmp_path, $peq_dump);
+/**
+ * Download file
+ */
+$peq_dump = file_get_contents('http://edit.peqtgc.com/weekly/peq_beta.zip');
+if (!file_exists($temporary_location)) {
+    mkdir($temporary_location);
+    file_put_contents($temporary_location . 'peq_beta.zip', $peq_dump);
+}
 
-echo "Installing mysql-client...\n";
+/**
+ * Source database
+ */
+echo "Installing unzip, mysql-client if not installed...\n";
 exec("apt-get update && apt-get -y install unzip mysql-client");
 
-echo "Unzipping $tmp_path...\n";
-exec("unzip -o $tmp_path -d $tmp_dir");
+echo "Unzipping peq_beta.zip...\n";
+exec("unzip -o {$temporary_location}peq_beta.zip -d {$temporary_location}");
 
 echo "Creating database PEQ...\n";
 exec('mysql -h mariadb -uroot -proot -e "CREATE DATABASE peq"  2>&1 | grep -v \'Warning\'');
+
 echo "Sourcing data...\n";
-chdir("$tmp_dir/peq-dump");
-exec("mysql -h mariadb -uroot -proot peq < create_all_tables.sql  2>&1 | grep -v 'Warning'");
+chdir($temporary_location);
+exec("mysql -h mariadb -uroot -proot peq < peqbeta.sql  2>&1 | grep -v 'Warning'");
+exec("mysql -h mariadb -uroot -proot peq < player_tables.sql  2>&1 | grep -v 'Warning'");
+chdir($origin_directory);
 echo "Seeding complete!\n";
 
-// Cleanup
-chdir($origin_directory);
-array_map('unlink', glob($tmp_dir . "/*.*"));
+/**
+ * Unlink
+ */
+array_map('unlink', glob($temporary_location . "*.*"));
+rmdir($temporary_location);
