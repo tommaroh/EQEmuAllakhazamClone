@@ -300,6 +300,14 @@ function get_size_string($val)
     }
 }
 
+// returns a string like ('zone1', 'zone2', 'zone3'), suitable for use in db query
+function get_ignore_zones_str(){
+	
+	global $ignore_zones;
+	$ignore_str = "('" . implode("','", $ignore_zones) . "')";
+	return $ignore_str;
+}	
+
 function getspell($id)
 {
     global $spells_table, $spell_globals_table, $use_spell_globals;

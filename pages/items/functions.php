@@ -81,9 +81,8 @@ function return_where_item_dropped($item_id, $via_ajax = 0)
         if ($merchants_dont_drop_stuff == TRUE) {
             $query .= " AND $npc_types_table.merchant_id=0";
         }
-        foreach ($ignore_zones AS $zid) {
-            $query .= " AND $zones_table.short_name!='$zid'";
-        }
+        $ignore_zones_str = get_ignore_zones_str();
+        $query .= " AND $zones_table.short_name NOT IN $ignore_zones_str";
         $query .= " GROUP BY $spawn_entry_table.npcID ORDER BY $zones_table.long_name ASC";
         $result = db_mysql_query($query) or message_die('item.php', 'MYSQL_QUERY', $query, mysqli_error());
         if (mysqli_num_rows($result) > 0) {
@@ -129,6 +128,7 @@ function return_where_item_sold($item_id){
             $spawn2_table,
             $zones_table,
             $spawn_entry_table,
+            $ignore_zones,
             $item;
 
     $is_item_sold_anywhere = get_field_result(
@@ -157,6 +157,10 @@ function return_where_item_sold($item_id){
             AND $merchant_list_table.merchantid = $npc_types_table.merchant_id
             AND $zones_table.short_name = $spawn2_table.zone
         ";
+
+        foreach ($ignore_zones AS $zid) {
+            $query .= " AND $zones_table.short_name!='$zid'";
+        }
 
         $result = db_mysql_query($query);
 
