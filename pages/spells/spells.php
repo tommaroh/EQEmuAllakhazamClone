@@ -63,8 +63,10 @@ $print_buffer .= '
 			<tr><td>Level:</td><td><select name="level">
 			<option value="">-----</option>';
 
+$selected = 0;
 for ($i = 1; $i <= $server_max_level; $i++) {
-    $print_buffer .= '<option value="' . $i . '"' . ($level == $i ? ' selected="1"' : '') . '>' . $i . '</option>';
+    $print_buffer .= '<option value="' . $i . '"' . ($level == $i ? ' selected="$selected"' : '') . '>' . $i . '</option>';
+	$selected = 1;
 }
 
 $print_buffer .= '</select>

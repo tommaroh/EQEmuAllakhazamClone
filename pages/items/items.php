@@ -37,15 +37,42 @@ $iavailevel = (isset($_GET['iavailevel']) ? addslashes($_GET['iavailevel']) : ''
 $ideity = (isset($_GET['ideity']) ? addslashes($_GET['ideity']) : '');
 
 if (count($_GET) > 2) {
-    $query = "SELECT $items_table.* FROM ($items_table";
+    $query = "
+	SELECT DISTINCT 
+		$items_table.id, 
+		$items_table.icon,
+		$items_table.Name,
+		$items_table.itemtype,
+		$items_table.ac, 
+		$items_table.hp, 
+		$items_table.damage, 
+		$items_table.delay   
+	FROM ($items_table";
 
     if ($discovered_items_only == TRUE) {
         $query .= ",discovered_items";
     }
 
-    if ($iavailability == 1) {
-        // mob dropped
-        $query .= ",$loot_drop_entries_table,$loot_table_entries,$npc_types_table";
+    if ($iavailability == 1) // mob dropped
+    {
+		$ignore_zone_str = get_ignore_zones_str();
+        $query .= " 
+			INNER JOIN $loot_drop_entries_table ON $loot_drop_entries_table.item_id=$items_table.id
+			INNER JOIN $loot_table_entries ON $loot_table_entries.lootdrop_id = $loot_drop_entries_table.lootdrop_id
+			INNER JOIN $npc_types_table ON $npc_types_table.loottable_id = $loot_table_entries.loottable_id
+			INNER JOIN $spawn_entry_table ON $spawn_entry_table.npcID = $npc_types_table.id
+			INNER JOIN $spawn2_table ON $spawn2_table.spawngroupID=$spawn_entry_table.spawngroupID
+			INNER JOIN $zones_table ON $zones_table.short_name = $spawn2_table.zone
+		";
+        if ($iavaillevel > 0) {
+            $query .= " AND $npc_types_table.level<=$iavaillevel";
+        }
+		$ignore_zones_str = get_ignore_zones_str();
+		$query .= " AND $zones_table.short_name NOT IN $ignore_zones_str";
+    }
+    if ($iavailability == 2) // merchant sold
+    {
+		$query .= " INNER JOIN $merchant_list_table ON $merchant_list_table.item=$items_table.id";
     }
     $query .= ")";
     $s = " WHERE";
@@ -82,21 +109,6 @@ if (count($_GET) > 2) {
     }
     if (($imod != "") AND ($imodvalue != "")) {
         $query .= " $s ($items_table.$imod $imodcomp $imodvalue)";
-        $s = "AND";
-    }
-    if ($iavailability == 1) // mob dropped
-    {
-        $query .= " $s $loot_drop_entries_table.item_id=$items_table.id
-				AND $loot_table_entries.lootdrop_id=$loot_drop_entries_table.lootdrop_id
-				AND $loot_table_entries.loottable_id=$npc_types_table.loottable_id";
-        if ($iavaillevel > 0) {
-            $query .= " AND $npc_types_table.level<=$iavaillevel";
-        }
-        $s = "AND";
-    }
-    if ($iavailability == 2) // merchant sold
-    {
-        $query .= ",$merchant_list_table $s $merchant_list_table.item=$items_table.id";
         $s = "AND";
     }
     if ($discovered_items_only == TRUE) {
@@ -145,7 +157,7 @@ if (count($_GET) > 2) {
         $query .= " $s ($items_table.nodrop=1)";
         $s = "AND";
     }
-    $query .= " GROUP BY $items_table.id ORDER BY $items_table.Name LIMIT " . (get_max_query_results_count($max_items_returned) + 1);
+    $query .= " ORDER BY $items_table.Name";
     $QueryResult = db_mysql_query($query);
 
     $field_values = '';
@@ -179,21 +191,10 @@ if (isset($QueryResult)) {
     $Tableborder = 0;
 
     $num_rows = mysqli_num_rows($QueryResult);
-    $total_row_count = $num_rows;
-    if ($num_rows > get_max_query_results_count($max_items_returned)) {
-        $num_rows = get_max_query_results_count($max_items_returned);
-    }
     $print_buffer .= "";
     if ($num_rows == 0) {
         $print_buffer .= "<b>No items found...</b><br>";
     } else {
-        $OutOf = "";
-        if ($total_row_count > $num_rows) {
-            $OutOf = " (Searches are limited to 100 Max Results)";
-        }
-        # $print_buffer .= "<b>" . $num_rows . " " . ($num_rows == 1 ? "item" : "items") . " displayed</b>" . $OutOf . "<br>";
-        $print_buffer .= "<br>";
-
         $print_buffer .= "<table class='display_table container_div datatable' id='item_search_results' style='width:100%'>";
         $print_buffer .= "
             <thead>
@@ -219,10 +220,7 @@ if (isset($QueryResult)) {
                 $TableData .= "<img src='" . $icons_url . "item_.gif' align='left'/>";
             }
             $TableData .= "</td><td>";
-
-            # CreateToolTip($row["id"], return_item_stat_box($row, 1));
             $TableData .= "<a href='?a=item&id=" . $row["id"] . "' id='" . $row["id"] . "'>" . $row["Name"] . "</a>";
-
             $TableData .= "</td><td>";
             $TableData .= $dbitypes[$row["itemtype"]];
             $TableData .= "</td><td>";
@@ -235,7 +233,6 @@ if (isset($QueryResult)) {
             $TableData .= $row["damage"];
             $TableData .= "</td><td>";
             $TableData .= $row["delay"];
-
             $TableData .= "</td><td>";
             $TableData .= $row["id"];
             $TableData .= "</td></tr>";
@@ -255,7 +252,7 @@ if (isset($QueryResult)) {
         <script>
             $(document).ready(function() {
                 var table = $(".datatable").DataTable( {
-                    paging:         false,
+                    "paging": true,
                     "searching": false,
                     "ordering": true,
                 } );
