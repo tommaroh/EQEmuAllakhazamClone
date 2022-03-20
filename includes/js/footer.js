@@ -215,12 +215,11 @@ function get_form_query_string(ID){
             val = '';
         }
         if($(this).attr('type') == "checkbox"){
-			console.log($(this));
             if ($(this).is(':checked')) {
                 val = 1;
             } else {
-				val = 0;
-			}
+                val = 0;
+            }
         }
 
         query_string = query_string + "&" + $(this).attr('id') + "=" + encodeURIComponent(val);
